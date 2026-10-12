@@ -1,0 +1,8 @@
+:root { color-scheme: dark; font-family: Arial, sans-serif; background: #0b1020; color: #eef2ff; }
+body { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; }
+.badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #243054; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 28px; }
+.card { border: 1px solid #314064; border-radius: 12px; padding: 16px; background: #111831; }
+.card strong { display: block; margin-bottom: 6px; }
+p { color: #c9d2ef; line-height: 1.6; }

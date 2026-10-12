@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-10-12T11:20:18.487Z",
+  "database": "auth_security_lab",
+  "schema": "public",
+  "counts": {
+    "users": 3,
+    "resources": 2,
+    "sessions": 186,
+    "audits": 1731
+  },
+  "grouped": [
+    {
+      "_count": {
+        "_all": 80
+      },
+      "mode": "auth-authz-only",
+      "outcome": "ATTACK_SUCCEEDED"
+    },
+    {
+      "_count": {
+        "_all": 80
+      },
+      "mode": "auth-authz-only",
+      "outcome": "ATTACK_BLOCKED"
+    },
+    {
+      "_count": {
+        "_all": 786
+      },
+      "mode": "vulnerable",
+      "outcome": "ATTACK_SUCCEEDED"
+    },
+    {
+      "_count": {
+        "_all": 785
+      },
+      "mode": "secure",
+      "outcome": "ATTACK_BLOCKED"
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "generatedAt": "2026-10-12T10:21:46.197Z",
+  "design": {
+    "repetitions": 10,
+    "scenarios": 16,
+    "modes": 2,
+    "expectedObservations": 320,
+    "actualObservations": 320,
+    "orderControl": "홀수 회차는 vulnerable→secure, 짝수 회차는 secure→vulnerable 순으로 교대"
+  },
+  "modes": [
+    {
+      "mode": "vulnerable",
+      "observations": 160,
+      "attackSuccessCount": 160,
+      "attackBlockedCount": 0,
+      "attackSuccessRatePercent": 100,
+      "responseTimeMs": {
+        "mean": 383.77,
+        "median": 146.76,
+        "min": 64.77,
+        "max": 7884.79
+      }
+    },
+    {
+      "mode": "secure",
+      "observations": 160,
+      "attackSuccessCount": 0,
+      "attackBlockedCount": 160,
+      "attackSuccessRatePercent": 0,
+      "responseTimeMs": {
+        "mean": 361.17,
+        "median": 153.93,
+        "min": 66.7,
+        "max": 4420.94
+      }
+    }
+  ],
+  "byScenario": [
+    {
+      "scenarioId": "AUTH-01",
+      "category": "인증",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTH-02",
+      "category": "인증",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTH-03",
+      "category": "인증",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTH-04",
+      "category": "인증",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "SESS-01",
+      "category": "세션",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "SESS-02",
+      "category": "세션",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "SESS-03",
+      "category": "세션",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "SESS-04",
+      "category": "세션",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTHZ-01",
+      "category": "권한",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTHZ-02",
+      "category": "권한",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTHZ-03",
+      "category": "권한",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "AUTHZ-04",
+      "category": "권한",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "TOKEN-01",
+      "category": "토큰·요청 흐름",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "TOKEN-02",
+      "category": "토큰·요청 흐름",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "FLOW-01",
+      "category": "토큰·요청 흐름",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    },
+    {
+      "scenarioId": "FLOW-02",
+      "category": "토큰·요청 흐름",
+      "vulnerableSuccesses": 10,
+      "secureSuccesses": 0,
+      "repetitions": 10
+    }
+  ]
+}
