@@ -134,3 +134,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Project-specific generated files
+.next-*/
+.next-game/
+playwright-report/
+test-results/
+work/
+outputs/
+

@@ -31,11 +31,12 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".next-auth-authz-only/types/**/*.ts",
     ".next-secure/types/**/*.ts",
     ".next-vulnerable/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-auth-authz-only/types/**/*.ts"
+    ".next-game/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
