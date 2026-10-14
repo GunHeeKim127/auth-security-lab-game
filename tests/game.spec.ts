@@ -24,3 +24,27 @@ test("예산 초과와 실행 중 중복 입력을 안전하게 막는다", asyn
   await page.getByRole("button", { name: "중단·초기화" }).click();
   await expect(page.getByRole("button", { name: "공격 웨이브 시작" })).toBeEnabled();
 });
+
+test("PWA 설치 자산과 서비스 워커를 제공한다", async ({ page, request }) => {
+  const manifestResponse = await request.get("/manifest.webmanifest");
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest = await manifestResponse.json();
+  expect(manifest.name).toBe("로그인 너머: 웹서비스 방어전");
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.icons).toEqual(expect.arrayContaining([
+    expect.objectContaining({ sizes: "192x192" }),
+    expect.objectContaining({ sizes: "512x512" }),
+  ]));
+
+  await expect((await request.get("/icons/icon-192.png")).ok()).toBeTruthy();
+  await expect((await request.get("/icons/icon-512.png")).ok()).toBeTruthy();
+  await expect((await request.get("/sw.js")).ok()).toBeTruthy();
+
+  await page.goto("/");
+  await page.waitForFunction(() => "serviceWorker" in navigator);
+  const registration = await page.evaluate(async () => {
+    const ready = await navigator.serviceWorker.ready;
+    return ready.active?.scriptURL ?? "";
+  });
+  expect(registration).toContain("/sw.js");
+});

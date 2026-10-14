@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { scenarios, type ScenarioCategory } from "@/lib/scenarios";
+import PwaInstall from "./PwaInstall";
 
 type Control={id:string;name:string;layer:string;cost:number;icon:string;description:string;blocks:string[]};
 const controls:Control[]=[
@@ -36,7 +37,7 @@ export default function Home(){
  }
  const detail=scenarios.find(s=>s.id===active);
  return <main>
-  <nav><a className="brand" href="#top"><i>LB</i><span>로그인 너머<small>CYBER DEFENSE</small></span></a><div><a href="#battle">방어전</a><a href="#arsenal">방어 장치</a><a href="#codex">공격 도감</a></div></nav>
+  <nav><a className="brand" href="#top"><i>LB</i><span>로그인 너머<small>CYBER DEFENSE</small></span></a><div><a href="#battle">방어전</a><a href="#arsenal">방어 장치</a><a href="#codex">공격 도감</a><PwaInstall /></div></nav>
   <section className="hero" id="top"><div><p className="kicker">INTERACTIVE SECURITY LAB</p><p className="paper-title">논문 · 웹 애플리케이션의 인증·인가 우회 경로 분석 및 다중 보안 통제 적용에 따른 취약점 개선 효과 평가</p><h1>우회 경로를 추적하고<br/><em>서비스를 방어하라</em></h1><p className="help-line"><b>웹서비스 개발자와 보안 학습자</b>가 16개 우회 공격을 직접 막아 보며 빠진 보안 통제를 발견하도록 돕습니다.</p><div className="mission-steps"><span><b>01</b> 방어 장치 배치</span><span><b>02</b> 공격 웨이브 실행</span><span><b>03</b> 결과·원리 확인</span></div><a href="#battle" className="cta">작전실 입장 <b>↓</b></a></div><div className="hero-core"><span className="orbit o1"/><span className="orbit o2"/><span className="scan"/><div className="core">16<small>ATTACK<br/>VECTORS</small></div><i className="blip b1"/><i className="blip b2"/><i className="blip b3"/></div></section>
 
   <section className="battle-wrap" id="battle"><header className="section-title"><div><p className="kicker">LIVE BATTLEFIELD</p><h2>실시간 방어 작전실</h2></div><div className={`status ${running?"live":complete?"done":"ready"}`}><i/>{running?`WAVE ${wave+1}/16`:complete?"전투 종료":"방어 준비"}</div></header>
