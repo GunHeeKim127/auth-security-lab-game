@@ -1,180 +1,65 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { scenarios, type ScenarioCategory } from "@/lib/scenarios";
 
-type Control = {
-  id: string;
-  name: string;
-  layer: string;
-  cost: number;
-  description: string;
-  blocks: string[];
-};
-
-const controls: Control[] = [
-  { id: "identity", name: "신원 노출 차단", layer: "인증", cost: 2, description: "균일 오류와 강한 비밀번호 정책을 적용합니다.", blocks: ["AUTH-01", "AUTH-03"] },
-  { id: "rate", name: "로그인 방화벽", layer: "인증", cost: 2, description: "계정과 출처별 반복 시도를 제한합니다.", blocks: ["AUTH-02", "AUTH-04"] },
-  { id: "session-entry", name: "안전한 세션 발급", layer: "세션", cost: 2, description: "로그인 후 ID를 바꾸고 쿠키를 보호합니다.", blocks: ["SESS-01", "SESS-02"] },
-  { id: "session-life", name: "세션 수명 관리", layer: "세션", cost: 2, description: "로그아웃·만료 뒤 세션 재사용을 차단합니다.", blocks: ["SESS-03", "SESS-04"] },
-  { id: "ownership", name: "자원 소유권 검문", layer: "인가", cost: 3, description: "조회·수정·삭제마다 소유자를 확인합니다.", blocks: ["AUTHZ-01", "AUTHZ-03", "AUTHZ-04"] },
-  { id: "role", name: "관리자 역할 검문", layer: "인가", cost: 2, description: "관리자 기능을 서버에서 다시 검사합니다.", blocks: ["AUTHZ-02"] },
-  { id: "token", name: "토큰 무결성 금고", layer: "토큰", cost: 3, description: "서명 알고리즘과 보안 변경 시점을 검증합니다.", blocks: ["TOKEN-01", "TOKEN-02"] },
-  { id: "flow", name: "복구·요청 보호막", layer: "요청 흐름", cost: 3, description: "단일 사용 토큰과 CSRF 검증을 적용합니다.", blocks: ["FLOW-01", "FLOW-02"] }
+type Control={id:string;name:string;layer:string;cost:number;icon:string;description:string;blocks:string[]};
+const controls:Control[]=[
+ {id:"identity",name:"신원 은폐막",layer:"인증",cost:2,icon:"◉",description:"균일 오류·강한 비밀번호",blocks:["AUTH-01","AUTH-03"]},
+ {id:"rate",name:"로그인 포탑",layer:"인증",cost:2,icon:"⌁",description:"반복·자동화 요청 제한",blocks:["AUTH-02","AUTH-04"]},
+ {id:"session-entry",name:"세션 재발급기",layer:"세션",cost:2,icon:"↻",description:"ID 교체·쿠키 보호",blocks:["SESS-01","SESS-02"]},
+ {id:"session-life",name:"세션 소멸장",layer:"세션",cost:2,icon:"⌛",description:"로그아웃·만료 검증",blocks:["SESS-03","SESS-04"]},
+ {id:"ownership",name:"소유권 검문소",layer:"인가",cost:3,icon:"◇",description:"자원마다 소유자 확인",blocks:["AUTHZ-01","AUTHZ-03","AUTHZ-04"]},
+ {id:"role",name:"역할 감시탑",layer:"인가",cost:2,icon:"♜",description:"관리자 권한 재검사",blocks:["AUTHZ-02"]},
+ {id:"token",name:"토큰 무결성 금고",layer:"토큰",cost:3,icon:"⬡",description:"서명·발급 시점 검증",blocks:["TOKEN-01","TOKEN-02"]},
+ {id:"flow",name:"요청 흐름 보호막",layer:"흐름",cost:3,icon:"✦",description:"CSRF·복구 토큰 검증",blocks:["FLOW-01","FLOW-02"]}
 ];
+const labels:Record<ScenarioCategory,string>={인증:"AUTH",세션:"SESSION",권한:"ACCESS","토큰·요청 흐름":"TOKEN"};
+const authPreset=["identity","rate","ownership","role"];
+const allPreset=controls.map(c=>c.id); const MAX=20;
+type Log={id:number;text:string;kind:"info"|"safe"|"danger"};
 
-const categoryLabel: Record<ScenarioCategory, string> = {
-  인증: "로그인 관문",
-  세션: "접속 유지 통로",
-  권한: "자원 접근 구역",
-  "토큰·요청 흐름": "토큰과 복구 통로"
-};
+export default function Home(){
+ const [selected,setSelected]=useState<string[]>(authPreset); const [running,setRunning]=useState(false);
+ const [wave,setWave]=useState(-1); const [resolved,setResolved]=useState<string[]>([]); const [health,setHealth]=useState(100);
+ const [logs,setLogs]=useState<Log[]>([{id:0,text:"방어 장치를 배치하고 공격 웨이브를 시작하세요.",kind:"info"}]);
+ const [speed,setSpeed]=useState(1); const [active,setActive]=useState<string|null>(null); const runId=useRef(0);
+ const chosen=controls.filter(c=>selected.includes(c.id)); const spent=chosen.reduce((a,c)=>a+c.cost,0);
+ const blocked=useMemo(()=>new Set(chosen.flatMap(c=>c.blocks)),[selected]); const blockedCount=scenarios.filter(s=>blocked.has(s.id)).length;
+ const current=wave>=0&&wave<scenarios.length?scenarios[wave]:null; const complete=wave===scenarios.length;
+ const breaches=resolved.filter(id=>!blocked.has(id)).length; const score=Math.max(0,Math.round((blockedCount/16)*80+(new Set(chosen.map(c=>c.layer)).size/5)*20));
+ function resetBattle(next=selected){runId.current++;setSelected(next);setRunning(false);setWave(-1);setResolved([]);setHealth(100);setLogs([{id:Date.now(),text:"새 방어 구성이 준비되었습니다.",kind:"info"}]);}
+ function toggle(c:Control){if(running)return; if(selected.includes(c.id))resetBattle(selected.filter(x=>x!==c.id));else if(spent+c.cost<=MAX)resetBattle([...selected,c.id]);}
+ async function launch(){const id=++runId.current;setRunning(true);setWave(0);setResolved([]);setHealth(100);setLogs([{id:Date.now(),text:"⚠ 적대 트래픽 감지. 16개 공격 웨이브가 접근합니다.",kind:"info"}]);
+  for(let i=0;i<scenarios.length;i++){if(runId.current!==id)return;const s=scenarios[i];setWave(i);setLogs(v=>[...v.slice(-5),{id:Date.now()+i,text:`${s.id} · ${s.title} 접근 중`,kind:"info"}]);await new Promise(r=>setTimeout(r,900/speed));if(runId.current!==id)return;const ok=blocked.has(s.id);setResolved(v=>[...v,s.id]);if(!ok)setHealth(h=>Math.max(0,h-7));setLogs(v=>[...v.slice(-5),{id:Date.now()+100+i,text:ok?`차단 성공 — ${controls.find(c=>c.blocks.includes(s.id)&&selected.includes(c.id))?.name}`:`침투 성공 — ${s.category} 계층 피해`,kind:ok?"safe":"danger"}]);await new Promise(r=>setTimeout(r,420/speed));}
+  if(runId.current===id){setWave(scenarios.length);setRunning(false);}
+ }
+ const detail=scenarios.find(s=>s.id===active);
+ return <main>
+  <nav><a className="brand" href="#top"><i>LB</i><span>로그인 너머<small>CYBER DEFENSE</small></span></a><div><a href="#battle">방어전</a><a href="#arsenal">방어 장치</a><a href="#codex">공격 도감</a></div></nav>
+  <section className="hero" id="top"><div><p className="kicker">INTERACTIVE SECURITY LAB</p><p className="paper-title">논문 · 웹 애플리케이션의 인증·인가 우회 경로 분석 및 다중 보안 통제 적용에 따른 취약점 개선 효과 평가</p><h1>우회 경로를 추적하고<br/><em>서비스를 방어하라</em></h1><p className="help-line"><b>웹서비스 개발자와 보안 학습자</b>가 16개 우회 공격을 직접 막아 보며 빠진 보안 통제를 발견하도록 돕습니다.</p><div className="mission-steps"><span><b>01</b> 방어 장치 배치</span><span><b>02</b> 공격 웨이브 실행</span><span><b>03</b> 결과·원리 확인</span></div><a href="#battle" className="cta">작전실 입장 <b>↓</b></a></div><div className="hero-core"><span className="orbit o1"/><span className="orbit o2"/><span className="scan"/><div className="core">16<small>ATTACK<br/>VECTORS</small></div><i className="blip b1"/><i className="blip b2"/><i className="blip b3"/></div></section>
 
-const MAX_BUDGET = 20;
-const authAuthzPreset = ["identity", "rate", "ownership", "role"];
-const fullPreset = controls.map((control) => control.id);
+  <section className="battle-wrap" id="battle"><header className="section-title"><div><p className="kicker">LIVE BATTLEFIELD</p><h2>실시간 방어 작전실</h2></div><div className={`status ${running?"live":complete?"done":"ready"}`}><i/>{running?`WAVE ${wave+1}/16`:complete?"전투 종료":"방어 준비"}</div></header>
+   <div className="hud"><div><span>SERVER HP</span><b className={health<50?"hurt":""}>{health}</b><div className="hp"><i style={{width:`${health}%`}}/></div></div><div><span>BLOCKED</span><b>{resolved.filter(x=>blocked.has(x)).length}</b><small>/ {resolved.length}</small></div><div><span>BREACHED</span><b className="red">{breaches}</b></div><div><span>DEFENSE SCORE</span><b>{complete?score:"---"}</b></div></div>
+   <div className={`arena ${running?"is-running":""} ${complete?"is-complete":""}`}>
+    <div className="lane attacker"><label>THREAT GATE</label><div className="enemy"><span>{current?labels[current.category]:complete?"END":"?"}</span><b>{current?.id??(complete?"CLEAR":"대기 중")}</b><small>{current?.title??"웨이브를 실행하세요"}</small></div><div className="spawn-lines"/></div>
+    <div className="flight-zone">{current&&<div key={`${current.id}-${resolved.length}`} className={`packet ${blocked.has(current.id)?"will-block":"will-hit"}`}><i/><b>{current.id}</b></div>}<span className="route r1"/><span className="route r2"/><span className="route r3"/></div>
+    <div className="defense-wall"><label>DEFENSE GRID</label><div className="turrets">{controls.map(c=><div key={c.id} className={`turret ${selected.includes(c.id)?"on":"off"} ${current&&c.blocks.includes(current.id)&&selected.includes(c.id)?"firing":""}`}><i>{c.icon}</i><small>{c.name}</small></div>)}</div></div>
+    <div className={`server ${health<50?"damaged":""}`}><label>CORE SERVER</label><div className="server-box"><i>⬡</i><b>AUTH<br/>SERVICE</b><span/></div></div>
+   </div>
+   <div className="console"><div className="console-head"><span>◉ LIVE EVENT LOG</span><div>속도 <button onClick={()=>setSpeed(speed===1?2:speed===2?4:1)}>×{speed}</button></div></div><div className="log-list">{logs.map(l=><p className={l.kind} key={l.id}><time>{new Date(l.id).toLocaleTimeString("ko-KR",{hour12:false})}</time>{l.text}</p>)}</div></div>
+   <div className="battle-actions"><button className="abort" onClick={()=>resetBattle()} disabled={!running}>중단·초기화</button><button className="launch" onClick={launch} disabled={running}>{running?"공격 진행 중…":complete?"다시 도전":"공격 웨이브 시작"}</button></div>
+   {complete&&<div className={`mission ${breaches?"failed":"victory"}`}><span>{breaches?"MISSION REPORT":"PERFECT DEFENSE"}</span><h3>{breaches?`${breaches}개의 우회 경로가 서버에 도달했습니다`:`16개 공격을 모두 차단했습니다`}</h3><p>{breaches?"인증과 인가 바깥의 세션·토큰·요청 흐름도 함께 보호해야 합니다.":"다중 보안 통제가 단일 계층의 빈틈을 보완했습니다."}</p></div>}
+  </section>
 
-export default function Home() {
-  const [selected, setSelected] = useState<string[]>(authAuthzPreset);
-  const [hasRun, setHasRun] = useState(false);
-  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  <section className="arsenal" id="arsenal"><header className="section-title"><div><p className="kicker">BUILD YOUR LOADOUT</p><h2>방어 장치 배치</h2><p>장치를 누르면 전장에 즉시 설치됩니다.</p></div><div className="budget"><span>가용 에너지</span><b>{MAX-spent}</b><small>/ {MAX} P</small></div></header>
+   <div className="presets"><button onClick={()=>resetBattle([])}>무방비</button><button onClick={()=>resetBattle(authPreset)}>인증·인가 요새</button><button onClick={()=>resetBattle(allPreset)}>다중 통제 완성</button></div>
+   <div className="cards">{controls.map(c=>{const on=selected.includes(c.id),disabled=!on&&spent+c.cost>MAX;return <button key={c.id} className={on?"on":""} disabled={disabled||running} onClick={()=>toggle(c)}><span className="card-icon">{c.icon}</span><i>{c.layer}</i><strong>{c.name}</strong><p>{c.description}</p><footer><span>{on?"ONLINE":"OFFLINE"}</span><b>{c.cost}P</b></footer></button>})}</div>
+  </section>
 
-  const selectedControls = controls.filter((control) => selected.includes(control.id));
-  const spent = selectedControls.reduce((sum, control) => sum + control.cost, 0);
-  const blockedIds = useMemo(() => new Set(selectedControls.flatMap((control) => control.blocks)), [selectedControls]);
-  const blockedCount = scenarios.filter((scenario) => blockedIds.has(scenario.id)).length;
-  const successCount = scenarios.length - blockedCount;
-  const successRate = Math.round((successCount / scenarios.length) * 100);
-  const layers = new Set(selectedControls.map((control) => control.layer)).size;
-  const score = Math.max(0, Math.round((blockedCount / 16) * 70 + (layers / 5) * 20 + ((MAX_BUDGET - spent) / MAX_BUDGET) * 10));
+  <section className="research"><span>RESEARCH DATA · 480 OBSERVATIONS</span><div><b>100%</b><small>무방비 공격 성공률</small></div><i>→</i><div><b>50%</b><small>인증·인가만 강화</small></div><i>→</i><div className="zero"><b>0%</b><small>다중 통제 적용</small></div></section>
 
-  function toggleControl(control: Control) {
-    setHasRun(false);
-    setActiveScenario(null);
-    if (selected.includes(control.id)) {
-      setSelected(selected.filter((id) => id !== control.id));
-      return;
-    }
-    if (spent + control.cost <= MAX_BUDGET) setSelected([...selected, control.id]);
-  }
-
-  function applyPreset(ids: string[]) {
-    setSelected(ids);
-    setHasRun(false);
-    setActiveScenario(null);
-  }
-
-  const active = scenarios.find((scenario) => scenario.id === activeScenario);
-  const activeControl = controls.find((control) => active && control.blocks.includes(active.id));
-
-  return (
-    <main>
-      <nav className="topbar">
-        <a className="brand" href="#top"><span>LB</span> 로그인 너머</a>
-        <div className="navlinks"><a href="#game">게임</a><a href="#research">연구 결과</a><a href="#codex">공격 도감</a></div>
-      </nav>
-
-      <section className="hero" id="top">
-        <div className="hero-copy">
-          <p className="eyebrow">ACCOUNT DEFENSE STRATEGY</p>
-          <h1>로그인은 막았다.<br /><em>그런데 침입은 끝나지 않았다.</em></h1>
-          <p className="lead">20 포인트의 보안 예산으로 웹서비스를 방어하세요. 로그인과 권한만 지킬지, 세션과 토큰 뒤편까지 보호할지는 당신의 선택입니다.</p>
-          <a className="primary" href="#game">첫 방어전 시작하기 <span>→</span></a>
-        </div>
-        <div className="hero-visual" aria-label="세 가지 보안 모드의 공격 성공률">
-          <div className="radar-ring ring-one" /><div className="radar-ring ring-two" />
-          <div className="shield-mark">⌾</div>
-          <div className="rate-card red"><strong>100%</strong><span>무방비</span></div>
-          <div className="rate-card amber"><strong>50%</strong><span>인증·인가만</span></div>
-          <div className="rate-card blue"><strong>0%</strong><span>다중 통제</span></div>
-        </div>
-      </section>
-
-      <section className="research-strip" id="research">
-        <div><span>실제 연구 데이터</span><strong>480</strong><small>총 공격 관찰</small></div>
-        <div><span>취약 모드</span><strong className="danger">160/160</strong><small>공격 성공</small></div>
-        <div><span>부분 강화</span><strong className="warning">80/160</strong><small>다른 경로로 우회</small></div>
-        <div><span>전체 강화</span><strong className="safe">0/160</strong><small>공격 성공</small></div>
-      </section>
-
-      <section className="game" id="game">
-        <header className="section-head">
-          <div><p className="eyebrow">DEFENSE LOADOUT</p><h2>방어 카드를 배치하세요</h2><p>통제 하나는 특정 경로만 막습니다. 여러 신뢰 경계를 함께 보세요.</p></div>
-          <div className="budget"><span>남은 예산</span><strong>{MAX_BUDGET - spent}</strong><small>/ {MAX_BUDGET} P</small></div>
-        </header>
-
-        <div className="preset-row">
-          <button onClick={() => applyPreset([])}>무방비 실험</button>
-          <button onClick={() => applyPreset(authAuthzPreset)}>인증·인가만 강화</button>
-          <button onClick={() => applyPreset(fullPreset)}>다중 통제 완성</button>
-          <button onClick={() => applyPreset([])}>초기화</button>
-        </div>
-
-        <div className="control-grid">
-          {controls.map((control) => {
-            const on = selected.includes(control.id);
-            const disabled = !on && spent + control.cost > MAX_BUDGET;
-            return (
-              <button className={`control-card ${on ? "selected" : ""}`} disabled={disabled} key={control.id} onClick={() => toggleControl(control)}>
-                <span className="control-top"><i>{control.layer}</i><b>{control.cost}P</b></span>
-                <strong>{control.name}</strong><small>{control.description}</small>
-                <span className="check">{on ? "✓ 배치 완료" : disabled ? "예산 부족" : "+ 배치하기"}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="launch-panel">
-          <div><span>예상 방어 범위</span><strong>{blockedCount}<small>/16 경로</small></strong></div>
-          <div className="launch-copy"><b>{layers}개 보안 계층 활성화</b><p>선택한 통제로 16개 공격을 한 번씩 시뮬레이션합니다.</p></div>
-          <button className="launch" onClick={() => setHasRun(true)}>공격 웨이브 실행</button>
-        </div>
-
-        {hasRun && (
-          <section className="result-panel" aria-live="polite">
-            <div className="score-block"><span>방어 점수</span><strong>{score}</strong><small>/100</small></div>
-            <div className="result-main">
-              <p className="eyebrow">BATTLE REPORT</p>
-              <h3>{successCount === 0 ? "모든 우회 경로를 막았습니다" : `${successCount}개의 우회 경로가 남았습니다`}</h3>
-              <div className="result-bar"><span style={{ width: `${successRate}%` }} /></div>
-              <p>공격 성공률 <b>{successRate}%</b> · 차단 {blockedCount}건 · 성공 {successCount}건</p>
-            </div>
-            <div className={`verdict ${successRate === 0 ? "complete" : "open"}`}>
-              {successRate === 50 ? "논문과 같은 부분 강화 결과" : successRate === 0 ? "다중 통제 완성" : successRate === 100 ? "모든 경로 노출" : "사용자 전략 결과"}
-            </div>
-          </section>
-        )}
-      </section>
-
-      <section className="codex" id="codex">
-        <header className="section-head"><div><p className="eyebrow">ATTACK CODEX</p><h2>16개 공격 경로 도감</h2><p>카드를 선택해 공격이 어디를 통과하고 무엇이 막는지 확인하세요.</p></div></header>
-        <div className="scenario-layout">
-          <div className="scenario-list">
-            {scenarios.map((scenario) => {
-              const blocked = blockedIds.has(scenario.id);
-              return (
-                <button key={scenario.id} onClick={() => setActiveScenario(scenario.id)} className={`${activeScenario === scenario.id ? "active" : ""} ${blocked ? "blocked" : "breached"}`}>
-                  <span>{scenario.id}</span><strong>{scenario.title}</strong><i>{hasRun ? (blocked ? "차단" : "성공") : categoryLabel[scenario.category]}</i>
-                </button>
-              );
-            })}
-          </div>
-          <aside className="scenario-detail">
-            {active ? (
-              <>
-                <span className="detail-id">{active.id} · {active.cwe}</span>
-                <h3>{active.title}</h3>
-                <dl><div><dt>취약 원인</dt><dd>{active.weakness}</dd></div><div><dt>공격 경로</dt><dd>{active.attack}</dd></div><div><dt>해결 방법</dt><dd>{active.defense}</dd></div></dl>
-                <div className={`path-result ${blockedIds.has(active.id) ? "safe" : "danger"}`}>
-                  <span>공격 입력</span><b>→</b><span>취약 검증 지점</span><b>→</b><span>{blockedIds.has(active.id) ? `${activeControl?.name}에서 차단` : "보호 자산 도달"}</span>
-                </div>
-              </>
-            ) : <div className="empty-detail"><span>⌖</span><p>왼쪽 공격 카드를 선택하세요.</p></div>}
-          </aside>
-        </div>
-      </section>
-
-      <footer><strong>로그인 너머</strong><p>김건희의 인증·인가 우회 경로 연구와 480건의 로컬 실험을 바탕으로 만든 교육용 게임입니다.</p></footer>
-    </main>
-  );
+  <section className="codex" id="codex"><header className="section-title"><div><p className="kicker">ATTACK CODEX</p><h2>16개 공격 경로 도감</h2></div></header><div className="codex-grid"><div className="scenario-list">{scenarios.map(s=><button key={s.id} className={`${active===s.id?"active":""} ${resolved.includes(s.id)?(blocked.has(s.id)?"safe":"breach"):""}`} onClick={()=>setActive(s.id)}><i>{labels[s.category]}</i><b>{s.id}</b><span>{s.title}</span><em>{resolved.includes(s.id)?(blocked.has(s.id)?"BLOCKED":"BREACH"):"VIEW"}</em></button>)}</div><aside>{detail?<><span>{detail.id} · {detail.cwe}</span><h3>{detail.title}</h3><dl><dt>취약 원인</dt><dd>{detail.weakness}</dd><dt>공격 방식</dt><dd>{detail.attack}</dd><dt>방어 원리</dt><dd>{detail.defense}</dd></dl></>:<div className="empty"><b>⌖</b><p>공격 카드를 선택해<br/>분석 정보를 확인하세요.</p></div>}</aside></div></section>
+  <div className="site-footer"><b>LOGIN BEYOND</b><span>김건희 · 인증·인가 우회 경로 연구 기반 교육용 시뮬레이션</span></div>
+ </main>
 }

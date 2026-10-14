@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -29,16 +29,19 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".next-auth-authz-only/types/**/*.ts",
-    ".next-secure/types/**/*.ts",
-    ".next-vulnerable/types/**/*.ts",
-    ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-game/types/**/*.ts"
+    "next.config.ts",
+    "playwright.game.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/game.spec.ts",
+    ".next-game/types/**/*.ts",
+    ".next-game/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next*",
+    "work",
+    "outputs"
   ]
 }

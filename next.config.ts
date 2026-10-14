@@ -2,12 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  distDir:
-    process.env.LAB_MODE === "secure"
-      ? ".next-game-secure"
-      : process.env.LAB_MODE === "auth-authz-only"
-        ? ".next-game-auth-authz-only"
-        : ".next-game",
+  distDir: ".next-game",
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
 };
 
 export default nextConfig;

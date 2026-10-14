@@ -1,9 +1,0 @@
-node_modules/
-.next/
-.next-vulnerable/
-.next-secure/
-playwright-report/
-test-results/
-.env
-.env.local
-*.log

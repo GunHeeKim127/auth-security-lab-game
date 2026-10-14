@@ -1,0 +1,17 @@
+{
+  "paperTitle": "웹 애플리케이션의 인증·인가 우회 경로 분석 및 다중 보안 통제 적용에 따른 취약점 개선 효과 평가",
+  "dataType": "aggregate-example-data",
+  "containsPersonalData": false,
+  "design": {
+    "attackPaths": 16,
+    "repetitionsPerCondition": 10,
+    "conditions": 3,
+    "totalObservations": 480
+  },
+  "results": [
+    { "condition": "vulnerable", "attempts": 160, "attacksSucceeded": 160, "successRatePercent": 100 },
+    { "condition": "auth-authz-only", "attempts": 160, "attacksSucceeded": 80, "successRatePercent": 50 },
+    { "condition": "multi-control", "attempts": 160, "attacksSucceeded": 0, "successRatePercent": 0 }
+  ],
+  "applicationRule": "Each game wave simulates the same 16 attack paths once. Selected controls block only their mapped paths; layered controls are required to block every path."
+}
